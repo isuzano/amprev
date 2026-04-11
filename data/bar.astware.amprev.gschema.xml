@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="bar.astware.amprev" path="/bar/astware/amprev/">
+    <key name="theme" type="s">
+      <default>'system'</default>
+      <summary>Preferred application theme</summary>
+      <description>Controls whether Amprev follows the system appearance or forces a light or dark theme.</description>
+    </key>
+  </schema>
+</schemalist>

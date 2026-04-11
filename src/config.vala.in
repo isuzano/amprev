@@ -1,0 +1,10 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Iuri Suzano <iuri@astware.bar>
+ * SPDX-License-Identifier: MIT
+ *
+ * Build-time paths used by the application.
+ */
+
+namespace Astware.Amprev {
+    public const string DATA_DIR = "@APP_DATA_DIR@";
+}

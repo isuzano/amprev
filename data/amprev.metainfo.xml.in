@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>@APP_ID@</id>
+  <name>@APP_NAME@</name>
+  <summary>Focused Markdown editor with live preview</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <icon type="stock">amprev</icon>
+  <launchable type="desktop-id">@APP_ID@.desktop</launchable>
+  <releases>
+    <release version="@VERSION@" date="2026-04-11"/>
+  </releases>
+</component>

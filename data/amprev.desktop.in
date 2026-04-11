@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=@APP_NAME@
+Exec=@APP_EXEC@
+Icon=@APP_ICON@
+Categories=Utility;TextEditor;
+Terminal=false
+StartupNotify=true
