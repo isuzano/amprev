@@ -132,9 +132,11 @@ body {
 }
 
 .markdown-body hr {
+  display: block;
+  height: 1px;
   border: 0;
-  border-top: 1px solid var(--border);
-  margin: 1.5em 0;
+  margin: 1.75em 0;
+  background-color: var(--border);
 }
 
 .markdown-body table {
