@@ -120,16 +120,49 @@ namespace Astware.Amprev {
         }
 
         private string? resolve_local_icon_path () {
-            /* Build-tree icon lookup keeps terminal runs and local development in sync with the
-             * installed icon name without adding runtime dependency on the source tree.
-             */
             try {
+                string? icon_dir = GLib.Environment.get_variable ("AMPREV_ICON_DIR");
+                if (icon_dir != null && icon_dir != "") {
+                    string icon_path = GLib.Path.build_filename (
+                        icon_dir,
+                        "hicolor",
+                        "128x128",
+                        "apps",
+                        "amprev.png"
+                    );
+
+                    if (GLib.FileUtils.test (icon_path, GLib.FileTest.EXISTS)) {
+                        return icon_path;
+                    }
+                }
+
                 string exe_path = GLib.FileUtils.read_link ("/proc/self/exe");
                 string exe_dir = GLib.Path.get_dirname (exe_path);
-                string icon_path = GLib.Path.build_filename (exe_dir, "..", "data", "amprev.png");
+                string build_icon_path = GLib.Path.build_filename (
+                    exe_dir,
+                    "..",
+                    "data",
+                    "icons",
+                    "hicolor",
+                    "128x128",
+                    "apps",
+                    "amprev.png"
+                );
 
-                if (GLib.FileUtils.test (icon_path, GLib.FileTest.EXISTS)) {
-                    return icon_path;
+                if (GLib.FileUtils.test (build_icon_path, GLib.FileTest.EXISTS)) {
+                    return build_icon_path;
+                }
+
+                string source_icon_path = GLib.Path.build_filename (
+                    exe_dir,
+                    "..",
+                    "..",
+                    "data",
+                    "amprev.png"
+                );
+
+                if (GLib.FileUtils.test (source_icon_path, GLib.FileTest.EXISTS)) {
+                    return source_icon_path;
                 }
             } catch (Error error) {
                 warning ("title icon lookup failed: %s", error.message);
