@@ -28,6 +28,16 @@ It follows the ASTEAM philosophy:
 
 ---
 
+## Screenshot
+
+The image below shows amprev's main workflow in a single capture: the editor on the left, the live preview on the right, with the interface kept clean and focused on writing.
+
+### Split View
+
+![amprev split view](assets/screenshots/split.png)
+
+---
+
 ## Features
 
 * Live Markdown preview
