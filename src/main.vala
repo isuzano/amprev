@@ -15,19 +15,20 @@ namespace Astware.Amprev {
             GLib.Environment.set_variable ("GSK_RENDERER", "cairo", false);
         }
 
-        Gtk.Window.set_default_icon_name ("amprev");
         ensure_schema_dir ();
+        Gtk.Window.set_default_icon_name ("amprev");
 
         var app = new Application ();
         return app.run (args);
     }
 
     private static void ensure_schema_dir () {
-        if (GLib.Environment.get_variable ("GSETTINGS_SCHEMA_DIR") != null) {
+        string? schema_dir = GLib.Environment.get_variable ("GSETTINGS_SCHEMA_DIR");
+        if (schema_dir != null && schema_dir != "" && schema_dir_is_valid (schema_dir)) {
             return;
         }
 
-        string? schema_dir = GLib.Environment.get_variable ("AMPREV_SCHEMA_DIR");
+        schema_dir = GLib.Environment.get_variable ("AMPREV_SCHEMA_DIR");
         if (schema_dir == null || schema_dir == "") {
             schema_dir = schema_dir_from_binary ();
             if (schema_dir == null) {
@@ -36,6 +37,11 @@ namespace Astware.Amprev {
         }
 
         GLib.Environment.set_variable ("GSETTINGS_SCHEMA_DIR", schema_dir, false);
+    }
+
+    private static bool schema_dir_is_valid (string schema_dir) {
+        string compiled_schema = GLib.Path.build_filename (schema_dir, "gschemas.compiled");
+        return GLib.FileUtils.test (compiled_schema, GLib.FileTest.EXISTS);
     }
 
     private static string? schema_dir_from_binary () {
