@@ -95,6 +95,12 @@ namespace Astware.Amprev {
                     continue;
                 }
 
+                if (is_thematic_break (trimmed)) {
+                    output.append ("<hr>\n");
+                    index++;
+                    continue;
+                }
+
                 int level;
                 if (is_heading (trimmed, out level)) {
                     string heading_text = trimmed.substring (level + 1, -1).strip ();
@@ -116,6 +122,11 @@ namespace Astware.Amprev {
 
                 if (is_list_item (trimmed)) {
                     index = append_list_block (lines, index, output);
+                    continue;
+                }
+
+                if (is_table_block_start (lines, index)) {
+                    index = append_table_block (lines, index, output);
                     continue;
                 }
 
@@ -204,7 +215,7 @@ namespace Astware.Amprev {
 
             while (index < lines.length) {
                 string trimmed = lines[index].strip ();
-                if (trimmed.length == 0 || is_block_start (trimmed)) {
+                if (trimmed.length == 0 || is_block_start_at (lines, index)) {
                     break;
                 }
 
@@ -225,13 +236,47 @@ namespace Astware.Amprev {
         private bool is_block_start (string trimmed) {
             int level;
             return is_code_fence (trimmed)
+                || is_thematic_break (trimmed)
                 || is_heading (trimmed, out level)
                 || is_blockquote (trimmed)
                 || is_list_item (trimmed);
         }
 
+        private bool is_block_start_at (string[] lines, int index) {
+            string trimmed = lines[index].strip ();
+            return is_block_start (trimmed) || is_table_block_start (lines, index);
+        }
+
         private bool is_code_fence (string trimmed) {
             return trimmed.has_prefix ("```");
+        }
+
+        private bool is_thematic_break (string trimmed) {
+            if (trimmed.length < 3) {
+                return false;
+            }
+
+            unichar marker = trimmed.get_char (0);
+            if (marker != '-' && marker != '*' && marker != '_') {
+                return false;
+            }
+
+            int marker_count = 0;
+            for (int index = 0; index < trimmed.length; index++) {
+                unichar ch = trimmed.get_char (index);
+                if (ch == marker) {
+                    marker_count++;
+                    continue;
+                }
+
+                if (ch == ' ') {
+                    continue;
+                }
+
+                return false;
+            }
+
+            return marker_count >= 3;
         }
 
         private bool is_heading (string trimmed, out int level) {
@@ -262,6 +307,70 @@ namespace Astware.Amprev {
             return is_unordered_list_item (trimmed) || is_ordered_list_item (trimmed);
         }
 
+        private bool is_table_block_start (string[] lines, int index) {
+            if (index + 1 >= lines.length) {
+                return false;
+            }
+
+            string header = lines[index].strip ();
+            string delimiter = lines[index + 1].strip ();
+
+            if (header.length == 0 || delimiter.length == 0) {
+                return false;
+            }
+
+            return is_table_row (header) && is_table_delimiter_row (delimiter);
+        }
+
+        private bool is_table_row (string trimmed) {
+            return trimmed.index_of_char ('|') >= 0;
+        }
+
+        private bool is_table_delimiter_row (string trimmed) {
+            string[] cells = split_table_cells (trimmed);
+            if (cells.length == 0) {
+                return false;
+            }
+
+            foreach (string cell in cells) {
+                string delimiter = cell.strip ();
+                if (!is_valid_table_delimiter (delimiter)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool is_valid_table_delimiter (string delimiter) {
+            if (delimiter.length < 3) {
+                return false;
+            }
+
+            int start = 0;
+            int end = delimiter.length;
+
+            if (delimiter.has_prefix (":")) {
+                start++;
+            }
+
+            if (delimiter.has_suffix (":")) {
+                end--;
+            }
+
+            if ((end - start) < 3) {
+                return false;
+            }
+
+            for (int index = start; index < end; index++) {
+                if (delimiter.get_char (index) != '-') {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private bool is_unordered_list_item (string trimmed) {
             return trimmed.has_prefix ("- ")
                 || trimmed.has_prefix ("* ")
@@ -283,6 +392,98 @@ namespace Astware.Amprev {
             }
 
             return trimmed.substring (dot + 2, -1).strip ();
+        }
+
+        private string[] split_table_cells (string line) {
+            string[] raw = line.split ("|");
+            string[] cells = {};
+            bool leading_pipe = line.has_prefix ("|");
+            bool trailing_pipe = line.has_suffix ("|");
+
+            for (int index = 0; index < raw.length; index++) {
+                bool skip_leading = leading_pipe && index == 0;
+                bool skip_trailing = trailing_pipe && index == raw.length - 1;
+                if (skip_leading || skip_trailing) {
+                    continue;
+                }
+
+                cells += raw[index];
+            }
+
+            return cells;
+        }
+
+        private int append_table_block (string[] lines, int start_index, StringBuilder output) {
+            string[] header_cells = split_table_cells (lines[start_index].strip ());
+            string[] delimiter_cells = split_table_cells (lines[start_index + 1].strip ());
+            int index = start_index + 2;
+
+            output.append ("<table>\n");
+            output.append ("<thead>\n<tr>\n");
+            append_table_row (output, "th", header_cells, delimiter_cells);
+            output.append ("</tr>\n</thead>\n");
+
+            output.append ("<tbody>\n");
+            while (index < lines.length) {
+                string trimmed = lines[index].strip ();
+                if (trimmed.length == 0 || !is_table_row (trimmed)) {
+                    break;
+                }
+
+                string[] body_cells = split_table_cells (trimmed);
+                output.append ("<tr>\n");
+                append_table_row (output, "td", body_cells, delimiter_cells);
+                output.append ("</tr>\n");
+                index++;
+            }
+            output.append ("</tbody>\n</table>\n");
+
+            return index;
+        }
+
+        private void append_table_row (
+            StringBuilder output,
+            string cell_tag,
+            string[] cells,
+            string[] delimiter_cells
+        ) {
+            int column_count = cells.length > delimiter_cells.length ? cells.length : delimiter_cells.length;
+            for (int index = 0; index < column_count; index++) {
+                string cell = index < cells.length ? cells[index] : "";
+                string? align = index < delimiter_cells.length ? table_alignment_for_cell (delimiter_cells[index]) : null;
+                output.append ("<");
+                output.append (cell_tag);
+                if (align != null) {
+                    output.append (" style=\"text-align: ");
+                    output.append (align);
+                    output.append (";\"");
+                }
+                output.append (">");
+                output.append (render_inline (cell.strip ()));
+                output.append ("</");
+                output.append (cell_tag);
+                output.append (">\n");
+            }
+        }
+
+        private string? table_alignment_for_cell (string cell) {
+            string trimmed = cell.strip ();
+            bool leading = trimmed.has_prefix (":");
+            bool trailing = trimmed.has_suffix (":");
+
+            if (leading && trailing) {
+                return "center";
+            }
+
+            if (leading) {
+                return "left";
+            }
+
+            if (trailing) {
+                return "right";
+            }
+
+            return null;
         }
 
         private string render_inline (string text) {
@@ -313,6 +514,10 @@ namespace Astware.Amprev {
                     continue;
                 }
 
+                if (try_append_strikethrough (text, ref index, output)) {
+                    continue;
+                }
+
                 if (try_append_italic (text, ref index, output)) {
                     continue;
                 }
@@ -338,6 +543,9 @@ namespace Astware.Amprev {
             next = choose_next (next, candidate);
 
             candidate = text.index_of_char ('_', start_index);
+            next = choose_next (next, candidate);
+
+            candidate = text.index_of_char ('~', start_index);
             next = choose_next (next, candidate);
 
             return next;
@@ -440,6 +648,24 @@ namespace Astware.Amprev {
             }
 
             return false;
+        }
+
+        private bool try_append_strikethrough (string text, ref int index, StringBuilder output) {
+            if (text.get_char (index) != '~' || index + 1 >= text.length || text.get_char (index + 1) != '~') {
+                return false;
+            }
+
+            int end = text.index_of ("~~", index + 2);
+            if (end < 0) {
+                return false;
+            }
+
+            string inner = text.substring (index + 2, end - index - 2);
+            output.append ("<del>");
+            output.append (render_inline (inner));
+            output.append ("</del>");
+            index = end + 2;
+            return true;
         }
 
     }
