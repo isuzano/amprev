@@ -58,7 +58,10 @@ namespace Astware.Amprev {
         private void register_local_icon_theme () {
             string? icon_dir = GLib.Environment.get_variable ("AMPREV_ICON_DIR");
             if (icon_dir == null || icon_dir == "") {
-                return;
+                icon_dir = icon_dir_from_binary ();
+                if (icon_dir == null) {
+                    return;
+                }
             }
 
             if (!GLib.FileUtils.test (
@@ -73,6 +76,24 @@ namespace Astware.Amprev {
             }
 
             Gtk.IconTheme.get_for_display (display).add_search_path (icon_dir);
+        }
+
+        private string? icon_dir_from_binary () {
+            try {
+                string exe_path = GLib.FileUtils.read_link ("/proc/self/exe");
+                string exe_dir = GLib.Path.get_dirname (exe_path);
+                string icon_dir = GLib.Path.build_filename (exe_dir, "..", "data", "icons");
+
+                if (GLib.FileUtils.test (
+                        GLib.Path.build_filename (icon_dir, "hicolor", "128x128", "apps", "amprev.png"),
+                        GLib.FileTest.EXISTS)) {
+                    return icon_dir;
+                }
+            } catch (Error error) {
+                warning ("icon theme fallback failed: %s", error.message);
+            }
+
+            return null;
         }
 
         private string runtime_resource_dir () {
