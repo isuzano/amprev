@@ -26,7 +26,8 @@ fi
 meson compile -C "$build_dir"
 
 schema_dir="$build_dir/data"
-if [[ -f "$schema_dir/org.astware.amprev.gschema.xml" ]]; then
+# Compile the project schema only when the build has staged the expected XML.
+if [[ -f "$schema_dir/bar.astware.amprev.gschema.xml" ]]; then
     glib-compile-schemas "$schema_dir"
 fi
 
