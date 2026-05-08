@@ -42,6 +42,7 @@ body {
   max-width: 980px;
   margin: 0 auto;
   padding: 32px 40px 80px;
+  word-wrap: break-word;
 }
 
 .markdown-body h1,
@@ -71,6 +72,18 @@ body {
   margin: 0.75em 0;
 }
 
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.markdown-body img[alt*="badge"],
+.markdown-body p > a > img {
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
 .markdown-body a {
   color: var(--accent);
   text-decoration: none;
@@ -94,6 +107,16 @@ body {
   margin: 0.75em 0;
 }
 
+.markdown-body ul.contains-task-list,
+.markdown-body li.task-list-item {
+  list-style: none;
+}
+
+.markdown-body li.task-list-item input[type="checkbox"] {
+  margin: 0 0.5em 0.2em -1.4em;
+  vertical-align: middle;
+}
+
 .markdown-body li + li {
   margin-top: 0.25em;
 }
@@ -104,6 +127,10 @@ body {
   background: var(--quote-bg);
   border-left: 4px solid var(--border);
   color: var(--muted);
+}
+
+.markdown-body blockquote blockquote {
+  margin: 0.8em 0 0.2em;
 }
 
 .markdown-body code {
@@ -131,6 +158,88 @@ body {
   white-space: pre;
 }
 
+.markdown-body pre.chroma {
+  display: block;
+}
+
+.markdown-body pre.chroma code {
+  background: transparent;
+  border: 0;
+  display: block;
+  padding: 0;
+  white-space: pre;
+}
+
+.markdown-body pre.chroma .line {
+  display: block;
+}
+
+.markdown-body .chroma {
+  color: var(--text);
+}
+
+.markdown-body .chroma .k,
+.markdown-body .chroma .kd,
+.markdown-body .chroma .kr,
+.markdown-body .chroma .kt,
+.markdown-body .chroma .kp {
+  color: #7fbaf5;
+}
+
+.markdown-body .chroma .nf,
+.markdown-body .chroma .nc,
+.markdown-body .chroma .nt {
+  color: #57c7ff;
+}
+
+.markdown-body .chroma .s,
+.markdown-body .chroma .s1,
+.markdown-body .chroma .s2,
+.markdown-body .chroma .sa,
+.markdown-body .chroma .sb,
+.markdown-body .chroma .sc,
+.markdown-body .chroma .sd,
+.markdown-body .chroma .se,
+.markdown-body .chroma .si,
+.markdown-body .chroma .ss {
+  color: #82cc6a;
+}
+
+.markdown-body .chroma .m,
+.markdown-body .chroma .mi,
+.markdown-body .chroma .mf,
+.markdown-body .chroma .mh,
+.markdown-body .chroma .mo {
+  color: #56b6c2;
+}
+
+.markdown-body .chroma .c,
+.markdown-body .chroma .ch,
+.markdown-body .chroma .cm,
+.markdown-body .chroma .c1,
+.markdown-body .chroma .cs {
+  color: #7f8caa;
+  font-style: italic;
+}
+
+.markdown-body .chroma .p,
+.markdown-body .chroma .o,
+.markdown-body .chroma .ow {
+  color: #c9d1d9;
+}
+
+.markdown-body .chroma .nb,
+.markdown-body .chroma .na,
+.markdown-body .chroma .no,
+.markdown-body .chroma .nn,
+.markdown-body .chroma .nv {
+  color: #ecbe7b;
+}
+
+.markdown-body .chroma .err {
+  color: #cf5967;
+}
+
 .markdown-body hr {
   display: block;
   height: 1px;
@@ -140,13 +249,27 @@ body {
 }
 
 .markdown-body table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
   border-collapse: collapse;
+  overflow: auto;
+  margin: 1em 0;
 }
 
 .markdown-body td,
 .markdown-body th {
   border: 1px solid var(--border);
   padding: 0.4em 0.7em;
+}
+
+.markdown-body th {
+  font-weight: 600;
+  background: var(--panel-alt);
+}
+
+.markdown-body tr:nth-child(2n) td {
+  background: color-mix(in srgb, var(--panel-alt) 45%, transparent);
 }
 
 .error-page {

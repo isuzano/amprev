@@ -38,9 +38,16 @@ This is ~~strikethrough~~.
 1. Ordered item one
 2. Ordered item two
 
+## Task List (GFM)
+
+- [ ] Pending item
+- [x] Completed item
+
 ## Blockquote
 
 > This is a simple blockquote.
+>
+> > Nested blockquote level 2.
 
 ## Code Block
 
@@ -70,3 +77,30 @@ int main (void) {
 ## Links
 
 This is a [simple link](https://example.com).
+
+## Autolink Literals (GFM)
+
+https://example.com/docs
+
+contact@example.com
+
+## Badge
+
+![badge](https://img.shields.io/badge/amprev-gfm-success)
+
+## Image
+
+![sample image](https://picsum.photos/640/220)
+
+## HTML Align Block
+
+<div align="center">
+  <img src="https://img.shields.io/badge/centered-html-blue" alt="centered badge">
+</div>
+
+## Details / Summary
+
+<details>
+  <summary>Show more</summary>
+  <p>Inline HTML content should render.</p>
+</details>
