@@ -1,5 +1,6 @@
 install_data(
     'resources/style.css',
+    'resources/github-markdown.css',
     install_dir: join_paths(get_option('datadir'), 'amprev', 'resources'),
 )
 
