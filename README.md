@@ -28,13 +28,16 @@ It follows the ASTEAM philosophy:
 
 ---
 
-## Screenshot
+## Screenshots
 
-The image below shows amprev's main workflow in a single capture: the editor on the left, the live preview on the right, with the interface kept clean and focused on writing.
+<p align="center">
+  <img src="assets/screenshots/amprev1.png" width="48%" alt="amprev screenshot 1" />
+  <img src="assets/screenshots/amprev2.png" width="48%" alt="amprev screenshot 2" />
+</p>
 
-### Split View
-
-![amprev split view](assets/screenshots/split.png)
+<p align="center">
+  Different views of amprev rendering GitHub Flavored Markdown in real time.
+</p>
 
 ---
 
