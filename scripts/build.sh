@@ -2,7 +2,8 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-build_dir="$script_dir/build"
+repo_root="$(cd "$script_dir/.." && pwd)"
+build_dir="$repo_root/build"
 run_app=false
 
 for arg in "$@"; do
@@ -18,9 +19,9 @@ for arg in "$@"; do
 done
 
 if [[ ! -d "$build_dir" || ! -f "$build_dir/build.ninja" ]]; then
-    meson setup "$build_dir" "$script_dir"
+    meson setup "$build_dir" "$repo_root"
 else
-    meson setup --reconfigure "$build_dir" "$script_dir"
+    meson setup --reconfigure "$build_dir" "$repo_root"
 fi
 
 meson compile -C "$build_dir"
@@ -39,7 +40,7 @@ if [[ "$run_app" == true ]]; then
         export GSK_RENDERER=cairo
     fi
     if [[ -z "${AMPREV_RESOURCE_DIR:-}" ]]; then
-        export AMPREV_RESOURCE_DIR="$script_dir/data/resources"
+        export AMPREV_RESOURCE_DIR="$repo_root/data/resources"
     fi
     if [[ -z "${AMPREV_ICON_DIR:-}" ]]; then
         export AMPREV_ICON_DIR="$build_dir/data/icons"

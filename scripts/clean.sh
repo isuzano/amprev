@@ -2,7 +2,8 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-build_dir="$script_dir/build"
+repo_root="$(cd "$script_dir/.." && pwd)"
+build_dir="$repo_root/build"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/amprev"
 
 all_flag=false
