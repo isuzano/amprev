@@ -19,10 +19,13 @@ namespace Astware.Amprev {
         private ThemeService theme_service;
         private EditorHighlightService highlight_service;
         private SimpleAction save_action;
+        private SimpleAction restore_action;
         private SimpleAction sync_action;
         private SimpleAction theme_action;
         private uint render_timeout_id = 0;
         private string pending_markdown = "";
+        private string initial_markdown = "";
+        private string preview_base_uri = "about:blank";
 
         public Actions (
             MainWindow window,
@@ -58,6 +61,18 @@ namespace Astware.Amprev {
             });
             save_action.set_enabled (false);
             window.add_action (save_action);
+
+            var save_as_action = new SimpleAction ("save-as", null);
+            save_as_action.activate.connect ((parameter) => {
+                save_document_as.begin ();
+            });
+            window.add_action (save_as_action);
+
+            restore_action = new SimpleAction ("restore-original", null);
+            restore_action.activate.connect ((parameter) => {
+                restore_original_document ();
+            });
+            window.add_action (restore_action);
 
             var export_markdown_action = new SimpleAction ("export-markdown", null);
             export_markdown_action.activate.connect ((parameter) => {
@@ -108,17 +123,22 @@ namespace Astware.Amprev {
             });
 
             document.html_changed.connect ((html) => {
-                window.update_preview (html);
+                window.update_preview (html, preview_base_uri);
             });
         }
 
         private GLib.MenuModel build_menu_model () {
             var menu = new GLib.Menu ();
 
-            var file_menu = new GLib.Menu ();
-            file_menu.append ("Open File", "win.open-file");
-            file_menu.append ("Save", "win.save");
-            menu.append_section (null, file_menu);
+            var file_primary_menu = new GLib.Menu ();
+            file_primary_menu.append ("Open File", "win.open-file");
+            file_primary_menu.append ("Save", "win.save");
+            file_primary_menu.append ("Save As", "win.save-as");
+            menu.append_section (null, file_primary_menu);
+
+            var restore_menu = new GLib.Menu ();
+            restore_menu.append ("Restore Original", "win.restore-original");
+            menu.append_section (null, restore_menu);
 
             var export_menu = new GLib.Menu ();
             export_menu.append ("Export Markdown", "win.export-markdown");
@@ -179,6 +199,8 @@ namespace Astware.Amprev {
 
                 document.set_source_file_path (path);
                 document.set_saved_markdown (contents);
+                initial_markdown = contents;
+                preview_base_uri = base_uri_for_path (path);
                 window.set_markdown (contents);
                 update_save_action_state ();
             } catch (Error error) {
@@ -205,6 +227,48 @@ namespace Astware.Amprev {
                 document.set_saved_markdown (document.get_markdown ());
                 update_save_action_state ();
             });
+        }
+
+        private async void save_document_as () {
+            var dialog = new Gtk.FileDialog ();
+            dialog.set_title ("Save As");
+            dialog.set_modal (true);
+            dialog.set_accept_label ("Save");
+            dialog.set_initial_name (document.get_markdown_export_name ());
+
+            var filter = new Gtk.FileFilter ();
+            filter.set_filter_name ("Markdown files");
+            filter.add_suffix ("md");
+            dialog.set_default_filter (filter);
+
+            try {
+                GLib.File file = yield dialog.save (window, null);
+                if (file == null) {
+                    return;
+                }
+
+                export_service.export_markdown (document.get_markdown (), file, (success, message) => {
+                    if (!success) {
+                        if (message != null) {
+                            window.show_toast (message);
+                        }
+                        return;
+                    }
+
+                    string? path = file.get_path ();
+                    if (path != null) {
+                        document.set_source_file_path (path);
+                        preview_base_uri = base_uri_for_path (path);
+                    }
+
+                    string markdown = document.get_markdown ();
+                    document.set_saved_markdown (markdown);
+                    initial_markdown = markdown;
+                    update_save_action_state ();
+                });
+            } catch (Error error) {
+                window.show_toast (error.message);
+            }
         }
 
         private async void export_markdown_document () {
@@ -274,6 +338,15 @@ namespace Astware.Amprev {
             save_action.set_enabled (document.can_save ());
         }
 
+        private void restore_original_document () {
+            document.set_markdown (initial_markdown);
+            window.set_markdown (initial_markdown);
+            engine.render_async (initial_markdown, (html) => {
+                document.set_html (html);
+                window.update_preview_force (html, preview_base_uri);
+            });
+        }
+
         private void schedule_render () {
             if (render_timeout_id != 0) {
                 GLib.Source.remove (render_timeout_id);
@@ -293,6 +366,21 @@ namespace Astware.Amprev {
 
                 return false;
             });
+        }
+
+        private string base_uri_for_path (string path) {
+            var file = GLib.File.new_for_path (path);
+            var parent = file.get_parent ();
+            if (parent != null) {
+                string? uri = parent.get_uri ();
+                if (uri != null && uri != "") {
+                    return uri.has_suffix ("/") ? uri : uri + "/";
+                }
+            }
+
+            string cwd = GLib.Environment.get_current_dir ();
+            string fallback_uri = GLib.File.new_for_path (cwd).get_uri ();
+            return fallback_uri.has_suffix ("/") ? fallback_uri : fallback_uri + "/";
         }
     }
 }

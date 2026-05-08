@@ -11,6 +11,7 @@ namespace Astware.Amprev {
         private WebKit.UserContentManager content_manager;
         private WebKit.WebView web_view;
         private string? pending_html = null;
+        private string pending_base_uri = "about:blank";
         private double scroll_top = 0.0;
         private double scroll_height = 0.0;
         private double viewport_height = 0.0;
@@ -55,15 +56,24 @@ namespace Astware.Amprev {
             return web_view;
         }
 
-        public void load_html (string html) {
+        public void load_html (string html, string? base_uri = null) {
             if (html == last_html) {
                 return;
             }
 
             pending_html = html;
+            pending_base_uri = base_uri != null && base_uri != "" ? base_uri : "about:blank";
             restore_scroll_pending = true;
             restore_fraction = current_fraction ();
-            flush_pending_html ();
+            flush_pending_html (false);
+        }
+
+        public void load_html_force (string html, string? base_uri = null) {
+            pending_html = html;
+            pending_base_uri = base_uri != null && base_uri != "" ? base_uri : "about:blank";
+            restore_scroll_pending = true;
+            restore_fraction = current_fraction ();
+            flush_pending_html (true);
         }
 
         public void scroll_to_fraction (double fraction) {
@@ -144,16 +154,21 @@ namespace Astware.Amprev {
         }
 
         private void on_web_view_realized () {
-            flush_pending_html ();
+            flush_pending_html (false);
         }
 
-        private void flush_pending_html () {
+        private void flush_pending_html (bool force_reload) {
             if (pending_html == null || !web_view.get_realized ()) {
                 return;
             }
 
+            if (!force_reload && pending_html == last_html) {
+                pending_html = null;
+                return;
+            }
+
             last_html = pending_html;
-            web_view.load_html (pending_html, "about:blank");
+            web_view.load_html (pending_html, pending_base_uri);
             pending_html = null;
         }
 

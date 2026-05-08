@@ -12,6 +12,7 @@ namespace Astware.Amprev {
     public class MainWindow : Adw.ApplicationWindow {
         private EditorView editor_view;
         private PreviewView preview_view;
+        private Gtk.Button restore_button;
         private Gtk.MenuButton menu_button;
         private Gtk.Label status_label;
         private uint status_clear_id = 0;
@@ -80,6 +81,14 @@ namespace Astware.Amprev {
 
             var title_box = build_title_box ();
 
+            restore_button = new Gtk.Button ();
+            restore_button.icon_name = "view-refresh-symbolic";
+            restore_button.has_frame = false;
+            restore_button.tooltip_text = "Restore original Markdown";
+            restore_button.valign = Gtk.Align.CENTER;
+            restore_button.margin_end = 6;
+            restore_button.action_name = "win.restore-original";
+
             menu_button = new Gtk.MenuButton ();
             menu_button.icon_name = "open-menu-symbolic";
             menu_button.has_frame = false;
@@ -89,6 +98,7 @@ namespace Astware.Amprev {
 
             header.title_widget = title_box;
             header.pack_start (menu_button);
+            header.pack_start (restore_button);
 
             return header;
         }
@@ -193,12 +203,12 @@ namespace Astware.Amprev {
             editor_view.set_markdown (markdown);
         }
 
-        public void update_preview (string html) {
-            preview_view.load_html (html);
+        public void update_preview (string html, string? base_uri = null) {
+            preview_view.load_html (html, base_uri);
         }
 
-        public PreviewView get_preview_view () {
-            return preview_view;
+        public void update_preview_force (string html, string? base_uri = null) {
+            preview_view.load_html_force (html, base_uri);
         }
 
         public Gtk.TextBuffer get_editor_buffer () {

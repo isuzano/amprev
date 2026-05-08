@@ -11,20 +11,14 @@ namespace Astware.Amprev {
      */
     public class Document : Object {
         private string markdown = "";
-        private string html = "";
         private string file_stem = "untitled";
         private string source_file_path = "";
         private string saved_markdown = "";
 
-        public signal void markdown_changed (string markdown);
         public signal void html_changed (string html);
 
         public string get_markdown () {
             return markdown;
-        }
-
-        public string get_html () {
-            return html;
         }
 
         public string get_file_stem () {
@@ -56,21 +50,15 @@ namespace Astware.Amprev {
 
         public void set_markdown (string markdown) {
             this.markdown = markdown;
-            markdown_changed (markdown);
         }
 
         public void set_html (string html) {
-            this.html = html;
             html_changed (html);
-        }
-
-        public void set_source_file_name (string file_name) {
-            file_stem = stem_from_name (file_name);
         }
 
         public void set_source_file_path (string path) {
             source_file_path = path;
-            set_source_file_name (GLib.Path.get_basename (path));
+            file_stem = stem_from_name (GLib.Path.get_basename (path));
         }
 
         public void set_saved_markdown (string markdown) {
